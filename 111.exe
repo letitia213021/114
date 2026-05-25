@@ -1,0 +1,45 @@
+import csv
+import urllib.request
+
+# ── 一次性載入資料（避免重複請求）────────────────────────────
+print(" 正在載入資料，請稍候...")
+
+url = 'https://data.moa.gov.tw/Service/OpenData/TransService.aspx?UnitId=QcbUEzN6E6DL&FOTT=CSV&IsTransData=1'
+
+try:
+    webpage = urllib.request.urlopen(url)
+    raw_data_lines = webpage.read().decode('utf-8-sig').splitlines()
+    data_rows = list(csv.reader(raw_data_lines))
+    print(f" 資料載入完成，共 {len(data_rows)} 筆記錄。\n")
+except Exception as e:
+    print(f" 資料載入失敗：{e}")
+    raise SystemExit
+
+# ── 欄位標題（第一列為 header）────────────────────────────────
+HEADER = data_rows[0] if data_rows else []
+DATA   = data_rows[1:]  # 跳過 header
+
+# ── 主查詢迴圈 ────────────────────────────────────────────────
+while True:
+    a = input(" 請輸入動物代號（4~6 位數），直接按 Enter 或輸入 'q' 離開：\n>>> ").strip()
+
+    if not a or a.lower() == 'q':
+        print(" 程式結束，掰掰！")
+        break
+
+    results = [row for row in DATA if len(row) > 6 and a in row[1]]
+
+    if not results:
+        print(f"  找不到動物代號含 '{a}' 的資料。\n")
+        continue
+
+    print(f"\n 共找到 {len(results)} 筆結果：")
+    print("-" * 60)
+    for row in results:
+        print(
+            f"   日期: {row[0]:12}"
+            f"   動物代號: {row[4]:10}"
+            f"   地點: {row[5]:10}"
+            f"   種類: {row[6]}"
+        )
+    print("-" * 60 + "\n")
